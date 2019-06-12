@@ -1,0 +1,184 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Real Time Call Graph - SSPingal </title>
+<style type="text/css">
+    #div_g {
+	    height:50%;
+    }
+    #div_g2 {
+	    height:50%;
+    }
+</style>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+
+<script type="text/javascript" src="static/dygraph-combined-dev.js"></script>
+<script type="text/javascript" src="static/mqttws31.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+/*
+	By @sspingal / June 2019
+	To plot the WiFi Calling call quality in real-time.
+*/
+
+	/* Configurations */
+	//var MQTTbroker = '10.74.136.85';
+	//var MQTTbroker = 'test.mosquitto.org';
+	var MQTTbroker = 'broker.hivemq.com';
+	//var MQTTport = 11883;
+	//var MQTTport = 8080;
+	var MQTTport = 8000;
+	var MQTTsubTopic = '/spingal/test/call'; 
+
+	var chart; // global variable for chart
+    	var data = [];
+    	var data2 = [];
+	var g;
+	var g2;
+	
+	var client = new Paho.MQTT.Client(MQTTbroker, MQTTport,
+				"myclientid_" + parseInt(Math.random() * 100, 10));
+	client.onMessageArrived = onMessageArrived;
+	client.onConnectionLost = onConnectionLost;	
+
+	var options = {
+		timeout: 3,
+		onSuccess: function () {
+			console.log("mqtt connected");
+			// Connection succeeded; subscribe to our topics
+			client.subscribe(MQTTsubTopic, {qos: 1});
+		},
+		onFailure: function (message) {
+			console.log("Connection failed, ERROR: " + message.errorMessage);
+			//window.setTimeout(location.reload(),20000); //wait 20seconds before trying to connect again.
+		}
+	};
+
+	function onConnectionLost(responseObject) {
+		console.log("connection lost: " + responseObject.errorMessage);
+		window.setTimeout(location.reload(),20000); //wait 20seconds before trying to connect again.
+	};
+
+	function onMessageArrived(message) {
+		var error = 0;
+                console.log(message.destinationName, '',message.payloadString);
+                var jsonObj = JSON.parse(message.payloadString);
+                console.log("Hostname = ", jsonObj.hn, jsonObj.ndir1, jsonObj.ndir2);
+		//var ii = Math.max(jsonObj.ndir1,sonObj.ndir2);
+		//var ii = jsonObj.ndir1;
+		//if (jsonObj.ndir2 > ii)
+		//	ii = jsonObj.ndir2;
+
+		//console.log("ii = ", ii);
+                for(var i = 0; i < jsonObj.ndir1; i++) {
+			console.log("data1",i,")", jsonObj.dir1[i]); 
+                        var x1 = new Date(jsonObj.ts1[i]);
+                        var y1 = jsonObj.dir1[i];
+                        console.log(x1, y1);
+                        data.push([x1, y1]);
+                        g.updateOptions( { 'file': data } );
+                }
+                for(var i = 0; i < jsonObj.ndir2; i++) {
+			console.log("data2(",i,")", jsonObj.dir2[i]); 
+                        var x2 = new Date(jsonObj.ts2[i]);
+                        var y2 = jsonObj.dir2[i];
+                        console.log(x2, y2);
+                        data2.push([x2, y2]);
+                        g2.updateOptions( { 'file': data2 } );
+                }
+
+//
+//		console.log(message.destinationName, '',message.payloadString);
+//	  	var jsonObj = JSON.parse(message.payloadString);
+//
+//		var t1 = jsonObj.d2_min_ts;
+//		var t2 = jsonObj.d2_max_ts;
+//
+//		var x1 = new Date(jsonObj.d2_min_ts);
+//		var x2 = new Date(jsonObj.d2_max_ts);
+//		//x.setUTCSeconds(jsonObj.ts2);
+//		//var thenum = message.payloadString.replace( /^\D+/g, ''); //remove any text spaces from the message
+//		console.log(x1, jsonObj.d2_min, x2, jsonObj.d2_max);
+//
+//		if(t1 && (t1 == t2)) { //Only 1 data point available
+//			data.push([x1, jsonObj.d2_min, jsonObj.d1_min]);
+//		} else if(t1 && (t1 < t2)) {
+//			data.push([x1, jsonObj.d2_min, jsonObj.d1_min]);
+//			data.push([x2, jsonObj.d2_max, jsonObj.d1_max]);
+//		} else if(t2 && (t2 < t1)){
+//			data.push([x2, jsonObj.d2_max, jsonObj.d1_max]);
+//			data.push([x1, jsonObj.d2_min, jsonObj.d1_min]);
+//		}
+//		else {
+//			//some error
+//			error = 1;
+//			console.log("t1 or t2 incorrect", t1, t2);
+//		}
+//
+//		if(!error) {
+//		    //data.shift();
+//		    g.updateOptions( { 'file': data } );
+//		}
+		
+	};
+
+	function isNumber(n) {
+	  return !isNaN(parseFloat(n)) && isFinite(n);
+	};
+
+	function init() {
+		// Connect to MQTT broker
+		client.connect(options);
+
+	};
+
+/* Settings for the chart */
+	$(document).ready(function() {
+		var t = new Date();
+      		//for (var i = 100; i >= 0; i--) {
+        	//	var x = new Date(t.getTime() - i * 1000);
+        	//	data.push([x, 0]);
+     		//}
+		
+      		g = new Dygraph(document.getElementById("div_g"), data,
+			{
+				drawPoints: true,
+                            	showRoller: false,
+			    	drawXAxis: true,
+                            	valueRange: [0, 100],
+                            	labels: ['Time', 'Score1'],
+			    	strokeWidth: 2, //Default Stroke Width
+				colors: ["orange"],
+				legend: "always",
+			   	series: {
+
+			    	}
+                          });
+      		g2 = new Dygraph(document.getElementById("div_g2"), data2,
+			{
+				drawPoints: true,
+                            	showRoller: false,
+			    	drawXAxis: true,
+                            	valueRange: [0, 100],
+                            	labels: ['Time', 'Score2'],
+			    	strokeWidth: 2, //Default Stroke Width
+				colors: ["blue"],
+				legend: "always",
+			   	series: {
+
+			    	}
+                          });
+    	}
+);
+
+</script>
+</head>
+<body onload="init();"><!--Start the javascript ball rolling and connect to the mqtt broker-->
+
+<div id="div_g" ></div>
+<div id="div_g2" ></div>
+
+</body>
+</html>
