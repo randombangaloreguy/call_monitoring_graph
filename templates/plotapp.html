@@ -20,16 +20,12 @@
 
 /*
 	By @sspingal / June 2019
-	To plot the WiFi Calling call quality in real-time.
+	To time-series plot the VoIP call quality in real-time.
 */
 
 	/* Configurations */
-	//var MQTTbroker = '10.74.136.85';
-	//var MQTTbroker = 'test.mosquitto.org';
-	var MQTTbroker = 'broker.hivemq.com';
-	//var MQTTport = 11883;
-	//var MQTTport = 8080;
-	var MQTTport = 8000;
+	var MQTTbroker = 'broker.hivemq.com'; //'test.mosquitto.org';
+	var MQTTport = 8000; //11883;
 	var MQTTsubTopic = '/spingal/test/call'; 
 
 	var chart; // global variable for chart
@@ -66,12 +62,7 @@
                 console.log(message.destinationName, '',message.payloadString);
                 var jsonObj = JSON.parse(message.payloadString);
                 console.log("Hostname = ", jsonObj.hn, jsonObj.ndir1, jsonObj.ndir2);
-		//var ii = Math.max(jsonObj.ndir1,sonObj.ndir2);
-		//var ii = jsonObj.ndir1;
-		//if (jsonObj.ndir2 > ii)
-		//	ii = jsonObj.ndir2;
 
-		//console.log("ii = ", ii);
                 for(var i = 0; i < jsonObj.ndir1; i++) {
 			console.log("data1",i,")", jsonObj.dir1[i]); 
                         var x1 = new Date(jsonObj.ts1[i]);
@@ -88,40 +79,6 @@
                         data2.push([x2, y2]);
                         g2.updateOptions( { 'file': data2 } );
                 }
-
-//
-//		console.log(message.destinationName, '',message.payloadString);
-//	  	var jsonObj = JSON.parse(message.payloadString);
-//
-//		var t1 = jsonObj.d2_min_ts;
-//		var t2 = jsonObj.d2_max_ts;
-//
-//		var x1 = new Date(jsonObj.d2_min_ts);
-//		var x2 = new Date(jsonObj.d2_max_ts);
-//		//x.setUTCSeconds(jsonObj.ts2);
-//		//var thenum = message.payloadString.replace( /^\D+/g, ''); //remove any text spaces from the message
-//		console.log(x1, jsonObj.d2_min, x2, jsonObj.d2_max);
-//
-//		if(t1 && (t1 == t2)) { //Only 1 data point available
-//			data.push([x1, jsonObj.d2_min, jsonObj.d1_min]);
-//		} else if(t1 && (t1 < t2)) {
-//			data.push([x1, jsonObj.d2_min, jsonObj.d1_min]);
-//			data.push([x2, jsonObj.d2_max, jsonObj.d1_max]);
-//		} else if(t2 && (t2 < t1)){
-//			data.push([x2, jsonObj.d2_max, jsonObj.d1_max]);
-//			data.push([x1, jsonObj.d2_min, jsonObj.d1_min]);
-//		}
-//		else {
-//			//some error
-//			error = 1;
-//			console.log("t1 or t2 incorrect", t1, t2);
-//		}
-//
-//		if(!error) {
-//		    //data.shift();
-//		    g.updateOptions( { 'file': data } );
-//		}
-		
 	};
 
 	function isNumber(n) {
