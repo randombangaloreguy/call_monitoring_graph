@@ -58,6 +58,19 @@
 	};
 
 	function onMessageArrived(message) {
+
+/*
+Message format in JSON		
+{
+  "host": "hostname",
+  "ndir1": 4,
+  "dir1": [3, 5, 6, 7],
+  "ts1" : [11111110, 11111111, 11111112, 1111116],
+  "ndir2": 3,
+  "dir2": [100, 10, 21],
+  "ts2" : [11111110, 11111111, 11111114]
+}
+*/
 		var error = 0;
                 console.log(message.destinationName, '',message.payloadString);
                 var jsonObj = JSON.parse(message.payloadString);
